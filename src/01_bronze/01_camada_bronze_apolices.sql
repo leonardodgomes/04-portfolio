@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS seguros_auto.`01_bronze`.bronze_apolices (
     id_apolice INT,
     id_cliente INT,
     data_inicio_apolice DATE,
-    premio_anual FLOAT,
+    codigo_produto STRING,
+    premio_anual DOUBLE,
     marca_carro STRING,
     ano_carro INT,
     codigo_postal STRING,
@@ -16,11 +17,10 @@ SELECT
     id_apolice,
     id_cliente,
     data_inicio_apolice,
+    codigo_produto,
     premio_anual,
     marca_carro,
     ano_carro,
     codigo_postal,
     CURRENT_TIMESTAMP() AS data_ingestao_bronze -- Aqui gera a data controlada pela Bronze
 FROM seguros_auto.`00_landing`.landing_apolices;
-
-	id_cliente	data_inicio_apolice	codigo_produto	premio_anual	marca_carro	ano_carro	codigo_postal	ingestion_time
