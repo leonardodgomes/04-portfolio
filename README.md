@@ -5,96 +5,40 @@ Este projeto de portefólio simula um ambiente real de produção numa segurador
 
 ---
 
-## Arquitetura do Pipeline & Linhagem
+## Fluxo e Arquitetura do Pipeline
 
-O pipeline está totalmente orquestrado através do **Databricks Workflows**, garantindo a execução ordenada e o isolamento de falhas por tarefa.
+O pipeline está totalmente isolado num catálogo exclusivo via Unity Catalog (`seguros_auto`) e orquestrado através do **Databricks Workflows**, garantindo a execução ordenada e o isolamento de falhas:
 
-```mermaid
-graph TD
-    %% Fontes de Dados (Camada de Ingestão)
-    subgraph 📥 Fontes de Dados (Simulação Raw)
-        A[Ficheiro Transacional: Apólices]
-        B[Ficheiro Transacional: Sinistros]
-        C[Tabela Auxiliar: Códigos Postais]
-        D[Tabela Auxiliar: Coberturas e Planos]
-    end
-
-    %% Camada Bronze
-    subgraph 🥉 Databricks - Camada Bronze
-        E[(bronze_apolices)]
-        F[(bronze_sinistros)]
-        G[(bronze_codigos_postais)]
-        H[(bronze_planos_produtos)]
-    end
-
-    %% Camada Prata
-    subgraph 🥈 Databricks - Camada Prata
-        I[(prata_dados_seguros)]
-    end
-
-    %% Camada Ouro
-    subgraph 🥇 Databricks - Camada Ouro
-        J[(ouro_analise_risco)]
-        K[(ouro_alertas_fraude)]
-    end
-
-    %% Visualização
-    subgraph 📊 Power BI
-        L[Dashboard de Negócio]
-    end
-
-    %% Fluxo de Dependências
-    A --> E
-    B --> F
-    C --> G
-    D --> H
-
-    E --> I
-    F --> I
-    G --> I
-    H --> I
-
-    I --> J
-    I --> K
-
-    J --> L
-    K --> L
-
-    %% Estilos Visuais
-    style E fill:#cd7f32,stroke:#333,stroke-width:1px,color:#fff
-    style F fill:#cd7f32,stroke:#333,stroke-width:1px,color:#fff
-    style G fill:#cd7f32,stroke:#333,stroke-width:1px,color:#fff
-    style H fill:#cd7f32,stroke:#333,stroke-width:1px,color:#fff
-    style I fill:#c0c0c0,stroke:#333,stroke-width:1px,color:#000
-    style J fill:#ffd700,stroke:#333,stroke-width:1px,color:#000
-    style K fill:#ffd700,stroke:#333,stroke-width:1px,color:#000
-    style L fill:#f1c40f,stroke:#333,stroke-width:2px,color:#000
-```
+1. **Ingestão (Camada Bronze):** Carga paralela e isolada das tabelas transacionais e cadastrais brutas (`bronze.clientes`, `bronze.apolices`, `bronze.sinistros`) e tabelas de suporte (`bronze.codigos_postais`, `bronze.planos_produtos`).
+2. **Transformação (Camada Prata):** Um ficheiro unificado consome as fontes da Bronze, executa limpezas de nulos, tratamento de integridade e cruza com os dados externos através de `LEFT JOIN`. O resultado é persistido em `silver.prata_dados_seguros`.
+3. **Agregação (Camada Ouro):** Leitura da base Prata para a criação de visões agregadas e otimizadas para consumo do Power BI (`gold.ouro_analise_risco` e `gold.ouro_alertas_fraude`).
 
 ---
 
-## 📁 Estrutura de Pastas do Repositório (Git)
+## Estrutura de Pastas do Repositório (Git)
 
 O projeto está organizado seguindo as melhores práticas de controlo de versão via **Databricks Git Folders**:
 
 ```text
 📁 portfolio-seguros-databricks-pbi
 │
-├── 📁 notebooks
-│   ├── 01_simulacao_gerador_dados.sql  <- Notebook utilitário para gerar dados fictícios
+├── 📁 src                               
+│   ├── 01_simulacao_gerador_dados.sql
 │   │
 │   ├── 📁 bronze
-│   │   ├── 02_ingestao_bronze_apolices.sql
-│   │   ├── 03_ingestao_bronze_sinistros.sql
-│   │   ├── 04_ingestao_bronze_codigos_postais.sql
-│   │   └── 05_ingestao_bronze_planos_produtos.sql
+│   │   ├── 02_ingestao_bronze_clientes.sql
+│   │   ├── 03_ingestao_bronze_apolices.sql
+│   │   ├── 04_ingestao_bronze_sinistros.sql
+│   │   ├── 05_ingestao_bronze_codigos_postais.sql
+│   │   └── 06_ingestao_bronze_planos_produtos.sql
 │   │
 │   ├── 📁 silver
-│   │   └── 06_transformacao_prata_principal.sql <- Ficheiro único de limpeza e enriquecimento
+│   │   └── 07_transformacao_prata_principal.sql
 │   │
 │   └── 📁 gold
-│       ├── 07_agregacao_ouro_risco.sql         <- Cubo de dados para Rácio de Sinistralidade
-│       └── 08_agregacao_ouro_fraude.sql        <- Filtros analíticos de potenciais fraudes
+│       ├── 08_agregacao_ouro_risco.sql
+│       └── 09_agregacao_ouro_fraude.sql
+│
 │
 ├── 📁 powerbi
 │   ├── dashboard_seguros.pbix                 <- Template do relatório final

@@ -1,14 +1,18 @@
 # --- Power BI ---
-# Ignora o arquivo pesado do relatório (evita o limite de 10MB do Databricks)
+# Ignora o arquivo pesado do relatório (evita o limite do GitHub/Databricks)
 powerbi/*.pbix
 
-# Ignora arquivos de backup automático e configurações locais do Power BI Desktop
+# Ignora arquivos de template e configurações locais do Power BI Desktop
 powerbi/*.pbit
 powerbi/.User.twb
 powerbi/ExecutionCache/
 
+# --- Desenvolvimento / Sandbox / Rascunhos ---
+# Bloqueia a pasta de testes para não poluir o repositório oficial
+src/00_sandbox/
+
 # --- Databricks / Python / Sistema ---
-# Ignora arquivos temporários ocultos que o Databricks ou o Git criam
+# Ignora arquivos temporários ocultos do sistema e das IDEs
 .DS_Store
 Thumbs.db
 *.tmp
@@ -16,7 +20,7 @@ Thumbs.db
 .idea/
 .vscode/
 
-# --- Segurança (Opcional, mas recomendado) ---
-# Caso você use algum arquivo para guardar senhas ou tokens localmente
+# --- Segurança ---
+# Bloqueia arquivos de credenciais, senhas ou tokens locais
 *.env
 secrets.json
